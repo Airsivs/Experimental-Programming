@@ -1,32 +1,84 @@
+#include "powertrain.h"
 #include <iostream>
-#include <chrono>
+#include <cstdlib> 
 #include <thread>
+#include <chrono>
 
-double Calculation(double Velocity, double DragCOEFFICIENT, double Area);
+int getGearChoice() {
+    std::cout << "---- VEKTORWERK DISTANZ UND TELEMETRIE KALKULATOR ----\n";
+    std::cout << "-- GEAR SELECTION --\n";
+    std::cout << "Select gear (1-6): ";
+    int gear{};
+    std::cin >> gear;
+    return gear;
+}
+
+double getCarWeight() {
+    std::cout << "---- VEKTORWERK DISTANZ UND TELEMETRIE KALKULATOR ----\n";
+    std::cout << "-- FAHRZEUGGEWICHT --\n";
+    std::cout << "Your car weight (kg): ";
+    double weight{};
+    std::cin >> weight;
+    return weight;
+}
+
+double getCarSpeed() {
+    std::cout << "---- VEKTORWERK DISTANZ UND TELEMETRIE KALKULATOR ----\n";
+    std::cout << "-- GESCHWINDIGKEIT --\n";
+    std::cout << "Your car speed (m/s): ";
+    double speed{};
+    std::cin >> speed;
+    return speed;
+}
+
+double getMotorTorque() {
+    std::cout << "---- VEKTORWERK DISTANZ UND TELEMETRIE KALKULATOR ----\n";
+    std::cout << "-- MOTORDREHMOMENT --\n";
+    std::cout << "Your engine torque (Nm): "; 
+    double torque{};
+    std::cin >> torque;
+    return torque;
+}
+
+void statisticsShow(int gear, double gearRatio, double wTorque, double tForce, double dForce, double nForce, double accel) {
+    std::cout << "=====================================================\n";
+    std::cout << "      VEKTORWERK TELEMETRY & POWERTRAIN REPORT       \n";
+    std::cout << "=====================================================\n";
+    std::cout << " Selected Gear      : " << gear << " (Ratio: " << gearRatio << ")\n";
+    std::cout << " Wheel Torque       : " << wTorque << " Nm\n";
+    std::cout << " Tractive Force     : " << tForce << " N\n";
+    std::cout << " Aerodynamic Drag   : " << dForce << " N\n";
+    std::cout << " Net Acceleration   : " << nForce << " N\n";
+    std::cout << " Instant Acceleration: " << accel << " m/s^2 (" << (accel / 9.81) << " G)\n";
+    std::cout << "=====================================================\n";
 
 
-int main(){
-    double inputVelocity{};
-    double inputCd{};
-    double inputArea{};
+}
 
-    std::cout << "---VEKTORWERK AERODYNAMICS SIM---" << '\n';
-    std::cout << "Input following variables;"<< '\n';
-    std::cout << "Velocity of the car (m/s): ";
-    std::cin >> inputVelocity;
-    std::cout << '\n';
-    std::cout << "Drag coefficient (moder sedan - 0.30): ";
-    std::cin >> inputCd;
-    std::cout << '\n';
-    std::cout << "Frontal area of the car in square meters(e.g., 2.2m^2): ";
-    std::cin >> inputArea;
-    std::cout << '\n';
-
-    double FinalDragForce = Calculation(inputVelocity,inputCd,inputArea);
+int main() {
+    
+    int gear = getGearChoice();
     system("cls");
-    std::cout << "Estimated drag force: " << FinalDragForce;
 
-    std::this_thread::sleep_for(std::chrono::seconds(2));
+    double weight = getCarWeight();
+    system("cls");
+
+    double speed = getCarSpeed();
+    system("cls");
+
+    double torque = getMotorTorque();
+    system("cls");
+
+    double ratio  = calculateGearRatio(gear);
+    double wTq    = calculateWheelTorque(torque, ratio);
+    double tFr    = calculateTractiveForce(wTq);
+    double dFr    = calculateDragForce(speed);
+    double nFr    = calculateNetForce(tFr, dFr);
+    double accel  = calculateAcceleration(nFr, weight);
+
+    statisticsShow(gear, ratio, wTq, tFr, dFr, nFr, accel);
+
+    std::this_thread::sleep_for(std::chrono::seconds(500));
 
     return 0;
 }
