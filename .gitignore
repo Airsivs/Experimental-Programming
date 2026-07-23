@@ -1,0 +1,7 @@
+# Build files
+*.exe
+*.obj
+*.pdb
+/x64/
+/Debug/
+/Release/

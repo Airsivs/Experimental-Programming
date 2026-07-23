@@ -6,11 +6,11 @@
             "label": "C/C++: g++.exe build active file",
             "command": "C:\\msys64\\ucrt64\\bin\\g++.exe",
             "args": [
-                "-fdiagnostics-color=always",
-                "-g",
-                "${file}",
-                "-o",
-                "${fileDirname}\\${fileBasenameNoExtension}.exe",
+            "-fdiagnostics-color=always",
+            "-g",
+            "S:\\C++\\Learning\\*.cpp",
+            "-o",
+            "S:\\C++\\Learning\\vektorwerk.exe"
             ],
             "options": {
                 "cwd": "${fileDirname}"
