@@ -4,94 +4,75 @@
 #include <thread>
 #include <cstdint>
 
-struct TelemetryPacket {
-    float x {0};
-    float y {0};
-    float z {0};
-    int engineTemperature {70};
-    double acceleration {0};
-    double currentSpeed {0};
-    double TelemetryPreviousSpeed {0};
-};
+void maxTheoreticalSpeed(){
+    constexpr double earthGravity {9.81};
+    constexpr int maximumSafeRPM {7000};
+    constexpr int idlingRPM {600};
+    constexpr double gearRatioMax {4.17};
+    constexpr int inputTorque {500};
 
-struct InitializationPacket {
-    float x {0};
-    float y {0};
-    float z {0};
-    int engineTemperature {70};
-    double acceleration {5.4};
-    double currentSpeed {0};
-    double TelemetryPreviousSpeed {0};
-};
+    constexpr double outputTorque {inputTorque*gearRatioMax*0.90};
+    constexpr double enginePower {(idlingRPM*outputTorque)/9.549};
 
-struct UserData {
-    double acceleration;
-    double previousSpeed;
-};
+    constexpr double airDensity {1.225};
+    constexpr double dragCoefficient {0.30};
+    constexpr double frontAreaHood {2.17};
 
-UserData grabUserInfo(){
-    double PreviousSpeedInput{};
-    double accelerationInput{};
+    constexpr long double maxTheoreticalSpeed {((2*enginePower)/(airDensity*dragCoefficient*frontAreaHood))/0.33};
 
-    std::cout << "---VEKTORWERK---" << '\n';
-    std::cout << "Input the following data: " << '\n';
-    std::cout << "Simulation starting speed (m/s): ";
-    std::cin >> PreviousSpeedInput;
-    std::cout << '\n' << "Acceleration per second: ";
-    std::cin >> accelerationInput;
-
-    return {accelerationInput, PreviousSpeedInput};
+    std::cout <<  "Max theoretical speed: " << maxTheoreticalSpeed << " M/S (calculation is wrong)" << '\n';
 }
 
-TelemetryPacket calculateData(const TelemetryPacket& prevTelemetry){
-    TelemetryPacket nextTelemetry;
+void CheckOilWarn(double oilLevel){
 
-    nextTelemetry.z = prevTelemetry.z;
-    nextTelemetry.y = prevTelemetry.y;
-    nextTelemetry.engineTemperature = prevTelemetry.engineTemperature;
-    nextTelemetry.acceleration = prevTelemetry.acceleration;
+    system("cls");
+    std::cout << "CHECK OIL LIGHT; OIL LEVEL BELOW THRESHOLD" << '\n';
+    std::cout << "CURRENT OIL LEVEL: " << oilLevel << '\n';
 
-    nextTelemetry.TelemetryPreviousSpeed = prevTelemetry.currentSpeed;
-    
-    nextTelemetry.currentSpeed = nextTelemetry.TelemetryPreviousSpeed + nextTelemetry.acceleration;
-    nextTelemetry.x = prevTelemetry.x + nextTelemetry.currentSpeed;
-    
-    return nextTelemetry;
-}
+};
 
-void PrintSpeed(const TelemetryPacket& Print){
-    std::cout << "PRINT SECTION" << '\n';
-    std::cout << "X: " << Print.x << " m" << '\n'
-              << "Y: " << Print.y << " m" << '\n'
-              << "Z: " << Print.z << " m" << '\n'
-              << "Temp: " << Print.engineTemperature << " C"<< '\n'
-              << "Accel: " << Print.acceleration << " {M/S}" << '\n'
-              << "Current Speed: " << Print.currentSpeed << " {M/S}" << '\n'
-              << "Prev Speed: " << Print.TelemetryPreviousSpeed << " {M/S}" << "\n";
-}
+void ABSwarn(int StatedSpeed){
+
+    for (int i = StatedSpeed; StatedSpeed >= 1; StatedSpeed -=5){
+        system("cls");
+        std::cout << "ABS INITIATED; SPEED DROP SIGNIFICANT." << '\n';
+        std::cout << "CURRENT SPEED: " << StatedSpeed;
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+    }
+
+};
+
+void CheckEngineWarn(int CurrentRPM, int maximumSafeRPM){
+
+    system("cls");
+
+    std::cout << "CHECK ENGINE LIGHT; RPM LIMIT EXCEEDED - " << maximumSafeRPM << '\n';
+    std::cout << "CURRENT RPM: " << CurrentRPM << '\n';
+
+};
 
 int main(){
-    UserData userSettings = grabUserInfo();
+    constexpr int maximumSafeRPM {7000};
 
-    TelemetryPacket TP1;
-    TP1.TelemetryPreviousSpeed = userSettings.previousSpeed;
-    TP1.currentSpeed = userSettings.previousSpeed;
-    TP1.acceleration = userSettings.acceleration;
+    maxTheoreticalSpeed();
 
-    for (int i = 1; i < 5000; i++) {
-        if (TP1.TelemetryPreviousSpeed < 100) {
+    const uint16_t WHEEL_SPEED_ADDRESS = 0x100; 
 
-            TP1 = calculateData(TP1); 
-            
-            std::cout << "\033[2J\033[1;1H"; 
-            
-            PrintSpeed(TP1);
+    double oilLevel {0.7};
+    uint16_t RPM {700};
+    uint8_t Speed {40};
+    uint8_t PrevSpeed {50};
 
-            std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    if (PrevSpeed-Speed > 30){
+        ABSwarn(Speed);
+    }
 
-        } else {
-            break; 
-        }
+    if (RPM > maximumSafeRPM){
+        CheckEngineWarn(RPM, maximumSafeRPM);
+    }
+
+    if (oilLevel < 1){
+        CheckOilWarn(oilLevel);
     }
 
     return 0;
