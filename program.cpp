@@ -4,76 +4,91 @@
 #include <thread>
 #include <cstdint>
 
-void maxTheoreticalSpeed(){
-    constexpr double earthGravity {9.81};
-    constexpr int maximumSafeRPM {7000};
-    constexpr int idlingRPM {600};
-    constexpr double gearRatioMax {4.17};
-    constexpr int inputTorque {500};
 
-    constexpr double outputTorque {inputTorque*gearRatioMax*0.90};
-    constexpr double enginePower {(idlingRPM*outputTorque)/9.549};
+void logDiagnosticEvent(std::string_view SubSystem, std::string_view OpName, std::int16_t CANtelemetryAddress, std::int16_t ReceivedBitmask, std::string_view vin){
 
-    constexpr double airDensity {1.225};
-    constexpr double dragCoefficient {0.30};
-    constexpr double frontAreaHood {2.17};
-
-    constexpr long double maxTheoreticalSpeed {((2*enginePower)/(airDensity*dragCoefficient*frontAreaHood))/0.33};
-
-    std::cout <<  "Max theoretical speed: " << maxTheoreticalSpeed << " M/S (calculation is wrong)" << '\n';
-}
-
-void CheckOilWarn(double oilLevel){
-
-    system("cls");
-    std::cout << "CHECK OIL LIGHT; OIL LEVEL BELOW THRESHOLD" << '\n';
-    std::cout << "CURRENT OIL LEVEL: " << oilLevel << '\n';
-
-};
-
-void ABSwarn(int StatedSpeed){
-
-    for (int i = StatedSpeed; StatedSpeed >= 1; StatedSpeed -=5){
         system("cls");
-        std::cout << "ABS INITIATED; SPEED DROP SIGNIFICANT." << '\n';
-        std::cout << "CURRENT SPEED: " << StatedSpeed;
-        std::this_thread::sleep_for(std::chrono::seconds(1));
+
+        std::cout << '\n' << "Vehicle operator name: " << OpName;
+        std::cout << '\n' << "Vehicle VIN: " << vin;
+        std::cout << '\n' << "Vehicle Subsystem: " <<  SubSystem;
+        std::cout << '\n' << "Vehicle CAN telemetry address: " <<  std::hex << CANtelemetryAddress << std::dec << '\n';
+
+        switch(ReceivedBitmask) {
+        case 0b0001:
+            std::cout << " Diagnostic bitmask status:  OVERHEATING" << '\n';
+            std::cout << " Received bitmask code status:  " << ReceivedBitmask << '\n';    
+            break;
+        case 0b0010:
+            std::cout << " Diagnostic bitmask status:  LOW VOLTAGE" << '\n';
+            std::cout << " Received bitmask code status:  " << ReceivedBitmask << '\n';
+            break;
+        case 0b0011:
+            std::cout << " Diagnostic bitmask status:  OVERHEATING & LOW VOLTAGE" << '\n';
+            std::cout << " Received bitmask code status:  " << ReceivedBitmask << '\n'; 
+            break;
+        case 0b0100:
+            std::cout << " Diagnostic bitmask status:  SENSOR DISCONNECTED" << '\n';
+            std::cout << " Received bitmask code status: " << ReceivedBitmask << '\n';
+            break;
+        case 0b0110:
+            std::cout << " Diagnostic bitmask status:  SENSOR DISCONNECTED & LOW VOLTAGE" << '\n';
+            std::cout << " Received bitmask code status:  " << ReceivedBitmask << '\n'; 
+            break;
+        case 0b0111:
+            std::cout << " Diagnostic bitmask status:  OVERHEATING, LOW VOLTAGE & SENSOR DISCONNECTED" << '\n';
+            std::cout << " Received bitmask code status:  " << ReceivedBitmask << '\n'; 
+            break;
+        case 0b1000:
+            std::cout << " Diagnostic bitmask status:  STORAGE FULL" << '\n';
+            std::cout << " Received bitmask code status:  " << ReceivedBitmask << '\n';
+            break;
+        case 0b1100:
+            std::cout << " Diagnostic bitmask status:  SENSOR DISCONNECTED & STORAGE FULL" << '\n';
+            std::cout << " Received bitmask code status:  " << ReceivedBitmask << '\n'; 
+            break;
+        case 0b1110:
+            std::cout << " Diagnostic bitmask status:  SENSOR DISCONNECTED, STORAGE FULL & LOW VOLTAGE" << '\n';
+            std::cout << " Received bitmask code status:  " << ReceivedBitmask << '\n'; 
+            break;
+        case 0b1111:
+            std::cout << " Diagnostic bitmask status:  OVERHEATING, SENSOR DISCONNECTED, STORAGE FULL & LOW VOLTAGE" << '\n';
+            std::cout << " Received bitmask code status:  " << ReceivedBitmask << '\n'; 
+            break;
+        default:
+            std::cout << " Diagnostic bitmask status:  NO ERROR DETECTED" << '\n';
+            std::cout << " Received bitmask code status:  " << ReceivedBitmask << '\n';
+            break;
     }
-
 };
 
-void CheckEngineWarn(int CurrentRPM, int maximumSafeRPM){
-
-    system("cls");
-
-    std::cout << "CHECK ENGINE LIGHT; RPM LIMIT EXCEEDED - " << maximumSafeRPM << '\n';
-    std::cout << "CURRENT RPM: " << CurrentRPM << '\n';
-
-};
 
 int main(){
-    constexpr int maximumSafeRPM {7000};
+    
+    std::string operatorName {};
+    std::string VIN {};
+    std::int16_t CANtelemetryAddress {0x111};
 
-    maxTheoreticalSpeed();
+    int sybsystemID {0x4F2A};
+    std::int16_t bitmask {0b1000};
 
-    const uint16_t WHEEL_SPEED_ADDRESS = 0x100; 
+    constexpr std::string_view powertrain {"POWERTRAIN_ECU"};
+    constexpr std::string_view abs_module {"ABS_MODULE"};
+    constexpr std::string_view telemetry_unit {"TELEMETRY_UNIT"};
 
-    double oilLevel {0.7};
-    uint16_t RPM {700};
-    uint8_t Speed {40};
-    uint8_t PrevSpeed {50};
+    // Create a temporary C-style string and assign those variables to view those
+    // then we pass that onto the function
 
-    if (PrevSpeed-Speed > 30){
-        ABSwarn(Speed);
-    }
+    // std::string is expensive to initialize therefor I replaced it with C-style
 
-    if (RPM > maximumSafeRPM){
-        CheckEngineWarn(RPM, maximumSafeRPM);
-    }
+    std::cout << "VEKTORWERK CAN-BUS DIAGNOSTIC TELEMETRY LOGGER" << '\n';
+    std::cout << "Input your name: ";
+    std::getline(std::cin >> std::ws, operatorName);
+    std::cout << '\n' << "Input your Vehicle Identification Tag: ";
+    std::getline (std::cin >> std::ws, VIN);
 
-    if (oilLevel < 1){
-        CheckOilWarn(oilLevel);
-    }
+    logDiagnosticEvent(powertrain,operatorName,CANtelemetryAddress,bitmask,VIN);
+
 
     return 0;
 }
