@@ -3,97 +3,37 @@
 #include <cstdint>
 #include <string_view> 
 #include <thread>
+#include <bitset>
 #include <chrono>
 
-template <typename T>
-constexpr T constAbs(T x)
-{
-    return (x < 0 ? -x : x);
-}
-
-
-constexpr bool approximatelyEqualRel(double a, double b, double relEpsilon)
-{
-    return (constAbs(a - b) <= (std::max(constAbs(a), constAbs(b)) * relEpsilon));
+std::int8_t hexConvert(std::uint8_t VehicularState12){
+    static_cast<int>(VehicularState12);
+    return VehicularState12;
 };
 
-void OutputPremature(userInput& O){
-
-
-    for (int i = 0; i < 5; i++){
-
-        system("cls");
-
-        std::cout << "======VEKTORWERK TELEMETRY======" << '\n';
-        std::cout << "Selected Simulation time: " << O.simulationTime << '\n';
-        std::cout << "Selected Coolant Temperature: " << O.coolantTemperature << '\n';
-        std::cout << "Selected steering angle: " << O.steeringAngle << '\n';
-
-        if (O.BrakeFaultAcitivty == 1 || O.BrakeFaultAcitivty == 0) {
-            std::cout << "Brake fault activity: " << std::boolalpha << static_cast<bool>(O.BrakeFaultAcitivty) << '\n';
-        } else {
-            std::cout << "Brake fault activity: INVALID INPUT\n";
-        }
-
-        if (O.ManualOverideActivity == 1 || O.ManualOverideActivity == 0) {
-            std::cout << "Manual Override Activity: " << std::boolalpha << static_cast<bool>(O.ManualOverideActivity) << '\n';
-        } else {
-            std::cout << "Manual Override Activity: INVALID INPUT\n";
-        }
-        std::cout << "(Simulation starting in " << 5 - i << ")" << '\n';
-        std::this_thread::sleep_for(std::chrono::seconds(1));
-        
-    }
-
-    if (O.coolantTemperature > 70 && approximatelyEqualRel(O.steeringAngle, 0.0, 1.0) && O.BrakeFaultAcitivty == 0 && O.ManualOverideActivity == 0){
-        system("cls");
-        std::cout << "System meets all requirements... Starting simulation...";
-        std::this_thread::sleep_for(std::chrono::seconds(2));
-    }
-    else {
-        system("cls");
-        std::cout << "System doesn't meet the requirements. Closing software.";
-        std::this_thread::sleep_for(std::chrono::seconds(5));
-    }
+std::string Check(std::uint8_t VehicularState, std::uint8_t InputFlag){
+    return (VehicularState & InputFlag) ? "X" : " ";
 }
 
-void Output(drivetrainNew& N, int tick, userInput& O){
+void output(std::uint8_t VehicularState){
+    std::cout << "=====================================================" << '\n';
+    std::cout << "VEKTORWERK ECU DIAGNOSTIC - EVENT: IGNITION START" << '\n';
+    std::cout << "=====================================================" << '\n';
 
-    bool CoolantCheck{};
-    if (O.coolantTemperature >= 70){
-        CoolantCheck = 1;
-    }
-    else{
-        CoolantCheck = 0;
-    }
+    std::cout << "RAW MEMORY REGISTER:" << '\n';
+    std::cout << "  Binary: " << std::bitset<8>(VehicularState) << '\n';
+    std::cout << "  Hex: 0x" << std::hex << static_cast<int>(VehicularState) << '\n';
+    std::cout << "  Decimal: " << std::dec << static_cast<int>(VehicularState) << '\n';
 
-    bool SteeringAngleCheck{};
-    if (approximatelyEqualRel(O.steeringAngle, 0.0, 2.0)){
-        SteeringAngleCheck = 1;
-    }
-    else {
-        SteeringAngleCheck = 0;
-    }
+    std::cout << "ACTIVE SYSTEMS: " << '\n';
+    std::cout << "[" << Check(VehicularState, FLAG_ENGINE_ON) << "] ENGINE ON" << '\n';
+    std::cout << "[" << Check(VehicularState, FLAG_ABS_ACTIVE) << "] ABS ACTIVE" << '\n';
+    std::cout << "[" << Check(VehicularState, FLAG_TRACTION_CONTROL) << "] TRACTION CONTROL" << '\n';
+    std::cout << "[" << Check(VehicularState, FLAG_CHECK_ENGINE) << "] CHECK ENGINE" << '\n';
+    std::cout << "[" << Check(VehicularState, FLAG_LOW_FUEL) << "] LOW FUEL" << '\n';
+    std::cout << "[" << Check(VehicularState, FLAG_DOOR_OPEN) << "] DOOR OPEN" << '\n';
+    std::cout << "[" << Check(VehicularState, FLAG_SEATBELT_UNFASTENED) << "] SEATBELT UNFASTENED" << '\n';
+    std::cout << "[" << Check(VehicularState, FLAG_CRITICAL_FAULT) << "] CRITICAL FAULT" << '\n';
 
-    std::cout << "=================== VEKTORWERK TELEMETRY [TICK #" << tick << "]===================" << '\n';
-    std::cout << "[DRIVETRAIN] RPM: " << N.RPM << " | Calculated gear slot: " << N.gear << " | Shift reccommendation: " << N.recommendation <<'\n';
-
-    std::cout << "[CRUISE CONTROL] Target: " << N.targetSpeed << " km/h | Sensor: " << N.speed << " km/h" << '\n';
-    std::cout << "- Direct (==) Check result:   " << std::boolalpha << N.DirectComparison << " (False negative due to FP precision)" <<'\n';
-    std::cout << "- Epsilon (|DIFF| < 1e-4):    " << std::boolalpha << N.EpsilonComparison << " (Target Speed Exceeded)" << '\n';
-    
-    std::cout << '\n';
-    std::cout << "[LAUNCH CONTROL]" << '\n';
-    std::cout << "- Coolant Temp (> 70.0 C):    " << std::boolalpha << CoolantCheck << " ( " << O.coolantTemperature << " C)" << '\n';
-    std::cout << "- Steering angle (~0.0 deg):  " << std::boolalpha << SteeringAngleCheck << " ( " << O.steeringAngle << " deg)" << '\n';
-    std::cout << "- Brake safety check:         " << std::boolalpha << O.BrakeFaultAcitivty << '\n';
-
-    bool launchLock{};
-    if (SteeringAngleCheck == 1 && CoolantCheck == 1 && O.BrakeFaultAcitivty == 0){
-        std::cout << "-> LAUNCH CONTROL STATUS:     SYSTEM READY";
-    }
-    else{std::cout << "-> LAUNCH CONTROL STATUS:     SYSTEM LOCKED";}
 
 }
-
-
