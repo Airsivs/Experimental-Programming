@@ -6,34 +6,25 @@
 #include <bitset>
 #include <chrono>
 
-std::int8_t hexConvert(std::uint8_t VehicularState12){
-    static_cast<int>(VehicularState12);
-    return VehicularState12;
-};
 
-std::string Check(std::uint8_t VehicularState, std::uint8_t InputFlag){
-    return (VehicularState & InputFlag) ? "X" : " ";
+
+std::string Check(std::uint8_t ecuRegister, std::uint8_t InputFlag){
+    return (ecuRegister & InputFlag) ? "X" : " ";
 }
 
-void output(std::uint8_t VehicularState){
-    std::cout << "=====================================================" << '\n';
-    std::cout << "VEKTORWERK ECU DIAGNOSTIC - EVENT: IGNITION START" << '\n';
-    std::cout << "=====================================================" << '\n';
+void outputStart(std::uint8_t ecuRegister){
+    std::cout << "=============================================" << '\n';
+    std::cout << "VEKTORWERK SYSTEM INITIALIZATION" << '\n';
+    std::cout << "=============================================" << '\n';
+    std::cout << '\n';
+}
 
-    std::cout << "RAW MEMORY REGISTER:" << '\n';
-    std::cout << "  Binary: " << std::bitset<8>(VehicularState) << '\n';
-    std::cout << "  Hex: 0x" << std::hex << static_cast<int>(VehicularState) << '\n';
-    std::cout << "  Decimal: " << std::dec << static_cast<int>(VehicularState) << '\n';
-
-    std::cout << "ACTIVE SYSTEMS: " << '\n';
-    std::cout << "[" << Check(VehicularState, FLAG_ENGINE_ON) << "] ENGINE ON" << '\n';
-    std::cout << "[" << Check(VehicularState, FLAG_ABS_ACTIVE) << "] ABS ACTIVE" << '\n';
-    std::cout << "[" << Check(VehicularState, FLAG_TRACTION_CONTROL) << "] TRACTION CONTROL" << '\n';
-    std::cout << "[" << Check(VehicularState, FLAG_CHECK_ENGINE) << "] CHECK ENGINE" << '\n';
-    std::cout << "[" << Check(VehicularState, FLAG_LOW_FUEL) << "] LOW FUEL" << '\n';
-    std::cout << "[" << Check(VehicularState, FLAG_DOOR_OPEN) << "] DOOR OPEN" << '\n';
-    std::cout << "[" << Check(VehicularState, FLAG_SEATBELT_UNFASTENED) << "] SEATBELT UNFASTENED" << '\n';
-    std::cout << "[" << Check(VehicularState, FLAG_CRITICAL_FAULT) << "] CRITICAL FAULT" << '\n';
-
-
+void output(std::uint8_t ecuRegister, int blockNumber, std::string_view eventHappening){
+    std::cout << "---[BLOCK " << blockNumber << ": "<< eventHappening <<"]---" << '\n';
+    std::cout << "Register: " << std::bitset<8>(ecuRegister) << " | Decimal: " << std::dec << static_cast<int>(ecuRegister)<< '\n';
+    std::cout << "[" << Check(ecuRegister, diagnostics::FLAG_LAUNCH_READY) << "] LAUNCH READY" << '\n';
+    std::cout << "[" << Check(ecuRegister, diagnostics::FLAG_OVERHEAT) << "] OVERHEAT" << '\n';
+    std::cout << "[" << Check(ecuRegister, diagnostics::FLAG_LIMP_MODE) << "] LIMP MODE" << '\n';
+    std::cout << "[" << Check(ecuRegister, diagnostics::FLAG_ABS_FAULT) << "] ABS FAULT" << '\n';
+    std::cout << '\n';
 }
