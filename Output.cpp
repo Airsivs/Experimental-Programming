@@ -47,7 +47,7 @@ bool CheckDirect(double a,double b){
     }
 }
 
-void OutputFrame(data::package& data, int tick){
+void OutputFrame(data::package& data, int tick, data::inputConversion& BOOL){
     using std::cout;
 
     cout << "===================VEKTORWERK TELEMETRY [TICK #" << tick << "]===================" << '\n';
@@ -58,8 +58,8 @@ void OutputFrame(data::package& data, int tick){
     cout << "- Epsilon (|DIFF| < 1e-4):  " << approximatelyEqualRel(data.targetspeed, data.sensorspeed,0.1) << " (Target speed exceeded)" << '\n';
 
     cout << "[LAUNCH CONTROL]" << '\n';
-    cout << "- Coolant Temp (> 70.0 C): " << "( 90 C)" << '\n';
-    cout << "- Steering angle (~0.0 deg): " << "( 90 C)" << '\n';
-    cout << "- Brake safety check: " << "( 90 C)" << '\n';
-    cout << "-> LAUNCH CONTROL STATUS: " << '\n';
+    cout << "- Coolant Temp (> 70.0 C): " << std::boolalpha << BOOL.CoolantBool << "( "<< BOOL.coolantTempBool << " C)" << '\n';
+    cout << "- Steering angle (~0.0 deg): " << BOOL.SteeringBool << "(~ "<< BOOL.steeringAngleBool << " deg)" << '\n';
+    cout << "- Brake safety check: " << BOOL.brakeCheck << '\n';
+    cout << "-> LAUNCH CONTROL STATUS: " << BOOL.launchState <<  '\n';
 };
