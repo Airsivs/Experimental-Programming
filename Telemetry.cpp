@@ -6,72 +6,69 @@
 #include <bitset>
 #include <chrono>
 
-namespace {
-
-    char CheckSport(std::uint8_t modeRegister){
-        using std::cout;
-        if (flag::MODE_SPORT & modeRegister){
-            return 'X';
-        }
-        else{
-            return ' ';
-        }
-    };
-
-    char CheckEco(std::uint8_t modeRegister){
-        using std::cout;
-        if (flag::MODE_ECO & modeRegister){
-            return 'X';
-        }
-        else{
-            return ' ';
-        }
-    };
-
-    char CheckTrack(std::uint8_t modeRegister){
-        using std::cout;
-        if (flag::MODE_TRACK & modeRegister){
-            return 'X';
-        }
-        else{
-            return ' ';
-        }
-    };
-    
-    char CheckLaunch(std::uint8_t modeRegister){
-        using std::cout;
-        if (flag::MODE_LAUNCH_CTRL & modeRegister){
-            return 'X';
-        }
-        else{
-            return ' ';
-        }
-    };
-    
-
+namespace{
+    constexpr int increaseG1{1000};
+    constexpr int increaseG2{600};
+    constexpr int increaseG3{300};
+    constexpr int increaseG4{200};
+    constexpr int increaseG56{150};
+    constexpr int turboGain{180};
+    //---------------------------
+    constexpr double gearRatioG1{4.06};
+    constexpr double gearRatioG2{2.40};
+    constexpr double gearRatioG3{1.58};
+    constexpr double gearRatioG4{1.19};
+    constexpr double gearRatioG56{0.9};
 }
 
-std::uint8_t Frame2BitManip(std::uint8_t& modeRegister){
-    modeRegister |= flag::MODE_SPORT;
-    modeRegister &= ~flag::MODE_ECO;
-    return flag::MODE_SPORT | flag::MODE_ECO;
-};
+data::package Drivetrain(data::package& data){
 
-std::uint8_t Frame3BitManip(std::uint8_t& modeRegister){
-    modeRegister |= flag::MODE_TRACK;
-    return flag::MODE_TRACK;
-};
+    int realRPM;
 
-std::uint8_t Frame5BitManip(std::uint8_t& modeRegister){
-    modeRegister &= ~(flag::MODE_ECO | flag::MODE_LAUNCH_CTRL | flag::MODE_SPORT | flag::MODE_TRACK);
-    return flag::MODE_ECO | flag::MODE_LAUNCH_CTRL | flag::MODE_SPORT | flag::MODE_TRACK;
-};
+    switch(data.gear){
+        case 1:
+            realRPM = data.RPM + increaseG1 + turboGain;
+            data.gearRatio = gearRatioG1;
+            break;
+        case 2:
+            realRPM = data.RPM + increaseG2 + turboGain;
+            data.gearRatio = gearRatioG2;
+            break;
+        case 3:
+            realRPM = data.RPM + increaseG3 + turboGain;
+            data.gearRatio = gearRatioG3;
+            break;
+        case 4:
+            realRPM = data.RPM + increaseG4 + turboGain;
+            data.gearRatio = gearRatioG4;
+            break;
+        default:
+            realRPM = data.RPM + increaseG56 + turboGain;
+            data.gearRatio = gearRatioG56;
+            break;
+    }
+
+    data.RPM = realRPM;
+    
+    if (data.RPM < 6000 & data.RPM > 2000){
+        data.recommendation = "OPTIMAL";
+    }
+    if (data.RPM > 6000){
+        data.recommendation = "UP-SHIFT";
+    }
+    else{
+        data.recommendation = "DOWNSHIFT";
+    }
+
+    if (data.RPM > 7000 & data.gear <=6){
+        data.RPM = 2400;
+        ++data.gear;
+    }
+    
 
 
-void FormatPayload(std::uint8_t modeRegister){
-    std::cout << "ACTIVE MODES: [" << CheckEco(modeRegister) << "] ECO | [" << CheckSport(modeRegister) << "] SPORT | [" << CheckTrack(modeRegister) << "] TRACK | [" << CheckLaunch(modeRegister) << "] LAUNCH CTRL" << '\n';
-};
+    return data;
 
-
+}
 
 

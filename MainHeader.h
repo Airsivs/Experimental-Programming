@@ -4,18 +4,35 @@
 #include <algorithm>
 
 namespace flag{
-    inline constexpr std::uint8_t MODE_ECO {0b0000'0001};
-    inline constexpr std::uint8_t MODE_SPORT {0b0000'0010};
-    inline constexpr std::uint8_t MODE_TRACK {0b0000'0100};
-    inline constexpr std::uint8_t MODE_LAUNCH_CTRL {0b0000'1000};
+    inline constexpr std::uint8_t COOLANT_TEMP {0b0000'0001};
+    inline constexpr std::uint8_t STEERING_ANGLE {0b0000'0010};
+    inline constexpr std::uint8_t BRAKE_CHECK {0b0000'0100};
+    inline constexpr std::uint8_t LAUNCH_CTRL {0b0000'1000};
 }
 
-inline std::uint8_t modeRegister {0b0000'0001};
-std::string ReturnModes(std::uint8_t modeRegister);
-void FormatPayload(std::uint8_t modeRegister);
-void logFrame(std::uint8_t modeRegister);
-std::uint8_t Frame2BitManip(std::uint8_t& modeRegister);
-std::uint8_t Frame3BitManip(std::uint8_t& modeRegister);
-std::uint8_t Frame5BitManip(std::uint8_t& modeRegister);
-void Initialize();
-void EndTelemetry();
+namespace data{
+
+    inline std::uint8_t ECU_REGISTER {0b0000'0000};
+
+    struct package{
+        int RPM;
+        double gearRatio;
+        int gear;
+        int targetspeed;
+        double sensorspeed;
+        std::string recommendation;
+    };
+    struct input{
+        double coolantTemp;
+        double steeringAngle;
+        bool brakecheck;
+        int tickAmount;
+    };
+}
+
+data::package Drivetrain(data::package& data);
+data::input InputFrame(data::input& input);
+void OutputFrame(data::package& data, int tick);
+static int tick{0};
+
+
