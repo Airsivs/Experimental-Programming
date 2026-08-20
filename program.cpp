@@ -10,18 +10,19 @@ int main(){
 
     data::input myInput{};
     data::package DrivetrainPackage{};
-    data::inputConversion InputConversionStart{};
     myInput = InputFrame(myInput);
     DrivetrainPackage.gear = 1;
     system("cls");
-    BoolCheck(InputConversionStart,myInput);
-    
+    FlagCheck(myInput);
+
     for (; Tick < myInput.tickAmount+1; Tick++){
         Drivetrain(DrivetrainPackage);
-        OutputFrame(DrivetrainPackage, Tick, InputConversionStart);
+        OutputFrame(DrivetrainPackage, Tick, myInput);
         std::this_thread::sleep_for(std::chrono::seconds(1));
         system("cls");
     }
+
+    EndStatistics(Tick);
 
     return 0;
     

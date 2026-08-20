@@ -30,63 +30,27 @@ constexpr bool approximatelyEqualRel(double a,double b,double epsilon){
     return (constAbs(a-b) <= (std::max(constAbs(a), constAbs(b))* epsilon));
 };
 
-data::inputConversion BoolCheck(data::inputConversion& input, data::input& convert){
+data::input FlagCheck(data::input& convert){
 
     if(convert.coolantTemp>70){
-        input.CoolantBool = 1;
-    }
-    else{
-        input.CoolantBool = 0;
+        data::ECU_REGISTER |= flag::COOLANT_TEMP;
     }
 
     if(approximatelyEqualRel(convert.steeringAngle,0.0,0.1)){
-        input.SteeringBool = 1;
-    }
-    else{
-        input.SteeringBool = 0;
+        data::ECU_REGISTER |= flag::STEERING_ANGLE;
     }
 
     if(convert.brakecheck==1){
-        input.brakeCheck = 1;
-    }
-    else{
-        input.brakeCheck = 0;
+        data::ECU_REGISTER |= flag::BRAKE_CHECK;
     }
 
-    input.coolantTempBool = convert.coolantTemp;
-    input.steeringAngleBool = convert.steeringAngle;
-
-    system("cls");
-    using std::cout;
-    cout << "=============VEKTORWERK TELEMETRY=============" << '\n';
-    cout << "DEBUG: " << '\n';
-    cout << std::boolalpha << "Coolant temp - " << input.CoolantBool << '\n';
-    cout << "Steering angle - " << input.SteeringBool << '\n';
-    cout << "Brake check - " << input.SteeringBool << '\n';
-
-    if (input.brakeCheck == 1 & input.CoolantBool == 1 & input.SteeringBool == 1){
-        input.launchState = 1;
-        cout << "[FINAL LAUNCH STATE]: " << input.launchState;
-        std::this_thread::sleep_for(std::chrono::seconds(5));
-        system("cls");
-        cout << "STARTING SIMULATION..." << '\n';
-        std::this_thread::sleep_for(std::chrono::seconds(2));
+    if (flag::COOLANT_TEMP | flag::STEERING_ANGLE | flag::BRAKE_CHECK){
+        data::ECU_REGISTER |= flag::LAUNCH_CTRL;
     }
-    else{
-        input.launchState = 0;
-        cout << "[FINAL LAUNCH STATE]: " << input.launchState;
-        std::this_thread::sleep_for(std::chrono::seconds(5));
-        system("cls");
-        cout << "CLOSING SIMULATION";
-        std::this_thread::sleep_for(std::chrono::seconds(2));
-        std::exit(0);
-    }
-    
-    cout << "Starting this dumpster fire" << '\n';
-    system("cls");
-    return input;
+
+    return convert;
+
 }
-
 
 
 data::package Drivetrain(data::package& data){

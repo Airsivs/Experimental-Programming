@@ -12,6 +12,16 @@ constexpr T constAbs(T x){
     return (x < 0 ? -x : x);
 }
 
+namespace check{
+    std::string CheckFlag(std::uint8_t flag, std::uint8_t ecuRegister){
+
+        if (flag & ecuRegister){
+            return "TRUE";
+        }
+        else{return "FALSE";}
+    }
+}
+
 data::input InputFrame(data::input& input){
     using std::cout;
     using std::cin; 
@@ -47,7 +57,7 @@ bool CheckDirect(double a,double b){
     }
 }
 
-void OutputFrame(data::package& data, int tick, data::inputConversion& BOOL){
+void OutputFrame(data::package& data, int tick, data::input& input){
     using std::cout;
 
     cout << "===================VEKTORWERK TELEMETRY [TICK #" << tick << "]===================" << '\n';
@@ -58,8 +68,23 @@ void OutputFrame(data::package& data, int tick, data::inputConversion& BOOL){
     cout << "- Epsilon (|DIFF| < 1e-4):  " << approximatelyEqualRel(data.targetspeed, data.sensorspeed,0.1) << " (Target speed exceeded)" << '\n';
 
     cout << "[LAUNCH CONTROL]" << '\n';
-    cout << "- Coolant Temp (> 70.0 C): " << std::boolalpha << BOOL.CoolantBool << "( "<< BOOL.coolantTempBool << " C)" << '\n';
-    cout << "- Steering angle (~0.0 deg): " << BOOL.SteeringBool << "(~ "<< BOOL.steeringAngleBool << " deg)" << '\n';
-    cout << "- Brake safety check: " << BOOL.brakeCheck << '\n';
-    cout << "-> LAUNCH CONTROL STATUS: " << BOOL.launchState <<  '\n';
+    cout << "- Coolant Temp (> 70.0 C): " << check::CheckFlag(flag::COOLANT_TEMP, data::ECU_REGISTER) << " ("<< input.coolantTemp << " C)" << '\n';
+    cout << "- Steering angle (~0.0 deg): " << check::CheckFlag(flag::STEERING_ANGLE, data::ECU_REGISTER) << "(~ "<< input.steeringAngle << " deg)" << '\n';
+    cout << "- Brake safety check: " << check::CheckFlag(flag::BRAKE_CHECK, data::ECU_REGISTER) << '\n';
+    cout << "-> LAUNCH CONTROL STATUS: " << check::CheckFlag(flag::LAUNCH_CTRL, data::ECU_REGISTER) <<  '\n';
 };
+
+void EndStatistics(int tick){
+
+    using std::cout;
+
+    for(int i {5}; i >= 0; --i){
+        cout << "===================VEKTORWERK TELEMETRY===================" << '\n';
+        cout << "======================END STATISTICS======================" << '\n';
+        cout << '\n';
+        cout << "FRAMES RAN: " << tick << '\n';
+        cout << "CLOSING PROGRAM IN: " << i;
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+        system("cls");
+    };
+}

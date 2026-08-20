@@ -28,20 +28,13 @@ namespace data{
         bool brakecheck;
         int tickAmount;
     };
-    struct inputConversion{
-        bool CoolantBool;
-        bool SteeringBool;
-        bool brakeCheck;
-        bool launchState;
-        double coolantTempBool;
-        double steeringAngleBool;
-    };
 }
 
 data::package Drivetrain(data::package& data);
 data::input InputFrame(data::input& input);
-data::inputConversion BoolCheck(data::inputConversion& input, data::input& convert);
-void OutputFrame(data::package& data, int tick, data::inputConversion& BOOL);
+data::input FlagCheck(data::input& convert);
+void OutputFrame(data::package& data, int tick, data::input& input);
 static int tick{0};
+void EndStatistics(int tick);
 
 
