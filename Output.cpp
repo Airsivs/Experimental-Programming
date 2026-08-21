@@ -22,11 +22,13 @@ namespace check{
     }
 }
 
+
 data::input InputFrame(data::input& input){
+
     using std::cout;
     using std::cin; 
 
-    cout << "===================VEKTORWERK TELEMETRY INPUT FRAME===================\n";
+    cout << "===================VEKTORWERK TELEMETRY INPUT FRAME===================\n"; // general vehicle configs
     cout << "Please input the following info:\n";
     
     cout << "Coolant temp (> 70.0 C):   ";
@@ -57,32 +59,45 @@ bool CheckDirect(double a,double b){
     }
 }
 
-void OutputFrame(data::package& data, int tick, data::input& input){
+void OutputFrame(data::package& data, int tick, data::input& input, std::string_view projectVer){
     using std::cout;
 
     cout << "===================VEKTORWERK TELEMETRY [TICK #" << tick << "]===================" << '\n';
     cout << "[DRIVETRAIN] RPM: " << data.RPM << " | Calculated gear slot: " << data.gear << " | Shift recommendation: " << data.recommendation << '\n';
-    cout << "[GEAR RATIO] " << data.gearRatio << '\n';
     cout << "[CRUISE CONTROL] Target: " << data.targetspeed << " km/h | Sensor: " << data.sensorspeed << " km/h" << '\n';
     cout << "- Direct (==) Check result: " << CheckDirect(data.targetspeed,data.sensorspeed) << " (False negative due to FP precision)" << '\n';
     cout << "- Epsilon (|DIFF| < 1e-4):  " << approximatelyEqualRel(data.targetspeed, data.sensorspeed,0.1) << " (Target speed exceeded)" << '\n';
 
+    cout << '\n';
+
     cout << "[LAUNCH CONTROL]" << '\n';
-    cout << "- Coolant Temp (> 70.0 C): " << check::CheckFlag(flag::COOLANT_TEMP, data::ECU_REGISTER) << " ("<< input.coolantTemp << " C)" << '\n';
-    cout << "- Steering angle (~0.0 deg): " << check::CheckFlag(flag::STEERING_ANGLE, data::ECU_REGISTER) << "(~ "<< input.steeringAngle << " deg)" << '\n';
-    cout << "- Brake safety check: " << check::CheckFlag(flag::BRAKE_CHECK, data::ECU_REGISTER) << '\n';
-    cout << "-> LAUNCH CONTROL STATUS: " << check::CheckFlag(flag::LAUNCH_CTRL, data::ECU_REGISTER) <<  '\n';
+    cout << "- Coolant Temp (> 70.0 C):     " << check::CheckFlag(flag::COOLANT_TEMP, data::ECU_REGISTER) << " ("<< input.coolantTemp << " C)" << '\n';
+    cout << "- Steering angle (~0.0 deg):   " << check::CheckFlag(flag::STEERING_ANGLE, data::ECU_REGISTER) << "(~ "<< input.steeringAngle << " deg)" << '\n';
+    cout << "- Brake safety check:          " << check::CheckFlag(flag::BRAKE_CHECK, data::ECU_REGISTER) << '\n';
+    cout << "-> LAUNCH CONTROL STATUS:      " << check::CheckFlag(flag::LAUNCH_CTRL, data::ECU_REGISTER) <<  '\n';
+
+    if(true){
+
+        cout << '\n';
+
+        cout << "[DEBUG]" << '\n';
+        cout << "-- GEAR RATIO: " << data.gearRatio << '\n';
+    }
+
+    cout << '\n';
+    cout << "PROJECT VERSION: " << projectVer;
+
 };
 
 void EndStatistics(int tick){
 
     using std::cout;
 
-    for(int i {5}; i >= 0; --i){
+    for(int i {10}; i >= 0; --i){
         cout << "===================VEKTORWERK TELEMETRY===================" << '\n';
         cout << "======================END STATISTICS======================" << '\n';
         cout << '\n';
-        cout << "FRAMES RAN: " << tick << '\n';
+        cout << "FRAMES RAN: " << tick-1 << '\n';
         cout << "CLOSING PROGRAM IN: " << i;
         std::this_thread::sleep_for(std::chrono::seconds(1));
         system("cls");

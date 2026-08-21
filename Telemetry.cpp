@@ -5,20 +5,21 @@
 #include <thread>
 #include <bitset>
 #include <chrono>
+#include <iomanip>
 
 namespace{
     constexpr int increaseG1{1000};
     constexpr int increaseG2{600};
     constexpr int increaseG3{300};
     constexpr int increaseG4{200};
-    constexpr int increaseG56{150};
+    constexpr int increaseG5{150};
     constexpr int turboGain{180};
     //---------------------------
     constexpr double gearRatioG1{4.06};
     constexpr double gearRatioG2{2.40};
     constexpr double gearRatioG3{1.58};
     constexpr double gearRatioG4{1.19};
-    constexpr double gearRatioG56{0.9};
+    constexpr double gearRatioG5{0.9};
 }
 
 template <typename T>
@@ -34,6 +35,7 @@ data::input FlagCheck(data::input& convert){
 
     if(convert.coolantTemp>70){
         data::ECU_REGISTER |= flag::COOLANT_TEMP;
+        std::string coolant = "BELOW 70 C";
     }
 
     if(approximatelyEqualRel(convert.steeringAngle,0.0,0.1)){
@@ -48,10 +50,33 @@ data::input FlagCheck(data::input& convert){
         data::ECU_REGISTER |= flag::LAUNCH_CTRL;
     }
 
+    system("cls");
+
+    using std::cout;
+    cout << "================VEKTORWERK TELEMETRY================" << '\n';
+    cout << "==========EVALUATION OF SIMULATION SETTINGS=========" << '\n';
+    cout << '\n';
+    cout << "[COOLANT TEMP]:   " << convert.coolantTemp << " C" << '\n';
+    cout << "[STEERING ANGLE]: " << convert.steeringAngle << " deg" << '\n';
+    cout << "[BRAKE SAFETY]:   " << std::boolalpha << convert.brakecheck << '\n';
+    cout << '\n';
+
+    cout << "[SELECTED VEHICLE TYPE]: " << '\n';
+
+    cout << '\n';
+    if (flag::COOLANT_TEMP | flag::STEERING_ANGLE | flag::BRAKE_CHECK){
+        cout << "[LAUNCH CONTROL]: READY - STARTING SIMULATION!";
+    }                                                                    // BUG HERE; ALWAYS READY NO MATTER WHAT (lol)
+    else{
+        cout << "[LAUNCH CONTROL]: NOT READY - CANCELLING SIMULATION!"; 
+    }
+
+    std::this_thread::sleep_for(std::chrono::seconds(5));
+
+
     return convert;
 
 }
-
 
 data::package Drivetrain(data::package& data){
 
@@ -75,21 +100,21 @@ data::package Drivetrain(data::package& data){
             data.gearRatio = gearRatioG4;
             break;
         default:
-            realRPM = data.RPM + increaseG56 + turboGain;
-            data.gearRatio = gearRatioG56;
+            realRPM = data.RPM + increaseG5 + turboGain;
+            data.gearRatio = gearRatioG5;
             break;
     }
 
     data.RPM = realRPM;
 
-    if (data.RPM < 6000 & data.RPM > 2000){
+    if (data.RPM < 6000 | data.RPM > 2000){
         data.recommendation = "OPTIMAL";
     }
     if (data.RPM > 6000){
         data.recommendation = "UP-SHIFT";
     }
-    else{
-        data.recommendation = "DOWNSHIFT";
+    if (data.RPM < 2000){
+        data.recommendation = "DOWNSHIFT"; // fixed??
     }
 
     if (data.RPM > 7000 & data.gear <=6){
