@@ -22,6 +22,34 @@ namespace check{
     }
 }
 
+int drivetrainInputFrame(){
+    using std::cout;
+    using std::cin;
+
+    int selected{};
+
+    while (true)
+    {
+        cout << "===================VEKTORWERK TELEMETRY===================\n";
+        cout << "================DRIVETRAIN MODEL SELECTION================\n";
+        cout << '\n';
+        cout << "[PLEASE SELECT ONE OF THE FOLLOWING AVAILABLE MODELS]\n";
+        cout << "-- BMW E92 335i (N54) [1]\n";
+        cout << "-- BMW M50 i4         [2]\n";
+        cout << "---------------------------------\n";
+        cout << "MAKE A SELECTION: ";
+        cin >> selected;
+
+        if(selected == 1){
+            break;
+        }
+        if(selected == 2){
+            break;
+        }
+    }
+
+    return selected;
+}
 
 data::input InputFrame(data::input& input){
 
@@ -72,7 +100,7 @@ void OutputFrame(data::package& data, int tick, data::input& input, std::string_
 
     cout << "[LAUNCH CONTROL]" << '\n';
     cout << "- Coolant Temp (> 70.0 C):     " << check::CheckFlag(flag::COOLANT_TEMP, data::ECU_REGISTER) << " ("<< input.coolantTemp << " C)" << '\n';
-    cout << "- Steering angle (~0.0 deg):   " << check::CheckFlag(flag::STEERING_ANGLE, data::ECU_REGISTER) << "(~ "<< input.steeringAngle << " deg)" << '\n';
+    cout << "- Steering angle (~0.0 deg):   " << check::CheckFlag(flag::STEERING_ANGLE, data::ECU_REGISTER) << " (~ "<< input.steeringAngle << " deg)" << '\n';
     cout << "- Brake safety check:          " << check::CheckFlag(flag::BRAKE_CHECK, data::ECU_REGISTER) << '\n';
     cout << "-> LAUNCH CONTROL STATUS:      " << check::CheckFlag(flag::LAUNCH_CTRL, data::ECU_REGISTER) <<  '\n';
 

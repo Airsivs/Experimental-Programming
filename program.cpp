@@ -12,10 +12,12 @@ int main(){
 
     data::input myInput{};
     data::package DrivetrainPackage{};
+    data::drivetrainModel DrivetrainProgram{};
+    ModelSelectionCheck(drivetrainInputFrame(),DrivetrainProgram);
     myInput = InputFrame(myInput);
     DrivetrainPackage.gear = 1;
     system("cls");
-    FlagCheck(myInput);
+    FlagCheck(myInput,DrivetrainProgram,modelName(DrivetrainProgram));
 
     for (; Tick < myInput.tickAmount+1; Tick++){
         Drivetrain(DrivetrainPackage);

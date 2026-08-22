@@ -32,20 +32,31 @@ namespace data{
     };
 
     struct drivetrainModel{
+        int gain1;
+        int gain2;
+        int gain3;
+        int gain4;
+        int gain5;
         double gearRatio1;
         double gearRatio2;
-        double gearRatio3;  // implement this whenever i feel like it
+        double gearRatio3;
         double gearRatio4;
         double gearRatio5;
         double finadriveRatio;
         double tireCircumference;
+        bool turbo;
+        int turboAmount;
+        int modelID;
     };
 }
 
 data::package Drivetrain(data::package& data);
 data::input InputFrame(data::input& input);
-data::input FlagCheck(data::input& convert);
+data::input FlagCheck(data::input& convert, data::drivetrainModel& drive, std::string_view VehicleName);
 void OutputFrame(data::package& data, int tick, data::input& input, std::string_view projectVer);
+int drivetrainInputFrame();
+data::drivetrainModel ModelSelectionCheck(int selected,data::drivetrainModel& drive);
+std::string modelName(data::drivetrainModel drive);
 static int tick{0};
 void EndStatistics(int tick);
 

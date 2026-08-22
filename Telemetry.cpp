@@ -22,6 +22,49 @@ namespace{
     constexpr double gearRatioG5{0.9};
 }
 
+namespace modelData{
+
+    namespace bmw_335i{
+        constexpr double ratioG1{4.06};
+        constexpr double ratioG2{2.40};
+        constexpr double ratioG3{1.58};
+        constexpr double ratioG4{1.19};
+        constexpr double ratioG5{0.9};
+        // -------------------------
+        constexpr int increaseG1{1000};
+        constexpr int increaseG2{600};
+        constexpr int increaseG3{300};
+        constexpr int increaseG4{200};
+        constexpr int increaseG5{150};
+        constexpr int turboGain{180};
+        // -------------------------
+        bool turbo = true;
+        constexpr double tireCircumference{20}; //cm
+        constexpr double finalDriveRatio{3.08};
+        constexpr int ModelID{1};
+    }
+
+    namespace bmw_M50i4{
+        constexpr double ratioG1{4.06};
+        constexpr double ratioG2{2.40};
+        constexpr double ratioG3{1.58};
+        constexpr double ratioG4{1.19};
+        constexpr double ratioG5{0.9};
+        // -------------------------
+        constexpr int increaseG1{1000};
+        constexpr int increaseG2{600};
+        constexpr int increaseG3{300};
+        constexpr int increaseG4{200};
+        constexpr int increaseG5{150};
+        constexpr int turboGain{180};
+        // -------------------------
+        bool turbo = true;
+        constexpr double tireCircumference{20}; //cm
+        constexpr double finalDriveRatio{3.08};
+        constexpr int ModelID{2};
+    }
+}
+
 template <typename T>
 constexpr T constAbs(T x){
     return (x < 0 ? -x : x);
@@ -31,7 +74,64 @@ constexpr bool approximatelyEqualRel(double a,double b,double epsilon){
     return (constAbs(a-b) <= (std::max(constAbs(a), constAbs(b))* epsilon));
 };
 
-data::input FlagCheck(data::input& convert){
+data::drivetrainModel ModelSelectionCheck(int selected,data::drivetrainModel& drive){
+    switch(selected){
+        case 1:
+            drive.gain1 = modelData::bmw_335i::increaseG1;
+            drive.gain2 = modelData::bmw_335i::increaseG2;
+            drive.gain3 = modelData::bmw_335i::increaseG3;
+            drive.gain4 = modelData::bmw_335i::increaseG4;
+            drive.gain5 = modelData::bmw_335i::increaseG5;
+            //---------------------------------------
+            drive.gearRatio1 = modelData::bmw_335i::ratioG1;
+            drive.gearRatio2 = modelData::bmw_335i::ratioG2;
+            drive.gearRatio3 = modelData::bmw_335i::ratioG3;
+            drive.gearRatio4 = modelData::bmw_335i::ratioG4;
+            drive.gearRatio5 = modelData::bmw_335i::ratioG5;
+            //---------------------------------------
+            drive.finadriveRatio = modelData::bmw_335i::finalDriveRatio;
+            drive.tireCircumference = modelData::bmw_335i::tireCircumference;
+            drive.turbo = modelData::bmw_335i::turbo;
+            drive.turboAmount = modelData::bmw_335i::turboGain;
+            drive.modelID = modelData::bmw_335i::ModelID;
+            break;
+
+        case 2:
+            drive.gain1 = modelData::bmw_M50i4::increaseG1;
+            drive.gain2 = modelData::bmw_M50i4::increaseG2;
+            drive.gain3 = modelData::bmw_M50i4::increaseG3;
+            drive.gain4 = modelData::bmw_M50i4::increaseG4;
+            drive.gain5 = modelData::bmw_M50i4::increaseG5;
+            //---------------------------------------
+            drive.gearRatio1 = modelData::bmw_M50i4::ratioG1;
+            drive.gearRatio2 = modelData::bmw_M50i4::ratioG2;
+            drive.gearRatio3 = modelData::bmw_M50i4::ratioG3;
+            drive.gearRatio4 = modelData::bmw_M50i4::ratioG4;
+            drive.gearRatio5 = modelData::bmw_M50i4::ratioG5;
+            //---------------------------------------
+            drive.finadriveRatio = modelData::bmw_M50i4::finalDriveRatio;
+            drive.tireCircumference = modelData::bmw_M50i4::tireCircumference;
+            drive.turbo = modelData::bmw_M50i4::turbo;
+            drive.turboAmount = modelData::bmw_M50i4::turboGain;
+            drive.modelID = modelData::bmw_M50i4::ModelID;
+            break;
+    }
+
+    return drive;
+    
+}
+
+std::string modelName(data::drivetrainModel drive){
+    switch(drive.modelID){
+        case 1:
+            return "BMW 335i"; 
+        case 2:
+            return "BMW M50 i4";
+        default: return "ERROR";
+    }
+};
+
+data::input FlagCheck(data::input& convert, data::drivetrainModel& drive, std::string_view VehicleName){
 
     if(convert.coolantTemp>70){
         data::ECU_REGISTER |= flag::COOLANT_TEMP;
@@ -61,15 +161,20 @@ data::input FlagCheck(data::input& convert){
     cout << "[BRAKE SAFETY]:   " << std::boolalpha << convert.brakecheck << '\n';
     cout << '\n';
 
-    cout << "[SELECTED VEHICLE TYPE]: " << '\n';
+    cout << "[SELECTED VEHICLE TYPE]: " << VehicleName << '\n';
 
     cout << '\n';
-    if (flag::COOLANT_TEMP | flag::STEERING_ANGLE | flag::BRAKE_CHECK){
-        cout << "[LAUNCH CONTROL]: READY - STARTING SIMULATION!";
-    }                                                                    // BUG HERE; ALWAYS READY NO MATTER WHAT (lol)
+    constexpr std::uint8_t requiredFlags = flag::COOLANT_TEMP | flag::STEERING_ANGLE | flag::BRAKE_CHECK;
+    if ((data::ECU_REGISTER & requiredFlags) == requiredFlags) {
+        data::ECU_REGISTER |= flag::LAUNCH_CTRL;
+    }                                                               // BUG HERE; ALWAYS READY NO MATTER WHAT (lol)
     else{
         cout << "[LAUNCH CONTROL]: NOT READY - CANCELLING SIMULATION!"; 
     }
+
+    cout << '\n';
+    cout << "-----------DEBUG-----------\n";
+    cout << "[MODEL ID] " << drive.modelID;
 
     std::this_thread::sleep_for(std::chrono::seconds(5));
 
